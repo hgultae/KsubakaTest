@@ -1,6 +1,7 @@
 package com.hg.ksubakatest.ui;
 
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -52,44 +53,8 @@ public class MainActivity extends AppCompatActivity {
         mFieldMovieName = (EditText) findViewById(R.id.field_movie_name);
         mRecyclerView = (RecyclerView) findViewById(R.id.recycler_film_list);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        
 
         showProgressDialog("", "Loading...");
-        mFilmListObservable = mService.getFilmList("Batman", "json", "movie");
-        mFilmListObservable.subscribeOn(Schedulers.newThread())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Subscriber<FilmList>() {
-                    @Override
-                    public void onCompleted() {
-
-                    }
-
-                    @Override
-                    public void onError(Throwable e) {
-                        Log.i(TAG, e.getMessage());
-                        e.getStackTrace();
-                    }
-
-                    @Override
-                    public void onNext(FilmList filmList) {
-
-                        hideProgressDialog();
-                        Log.i(TAG, "size of list: " + filmList.getSearch().size());
-
-                        mFilmListAdapter = new FilmListAdapter(MainActivity.this, filmList, R.layout.row_film_list);
-                        mRecyclerView.setAdapter(mFilmListAdapter);
-
-                        mFilmListAdapter.setOnItemClickListener(new FilmListAdapter.OnItemClickListener() {
-                            @Override
-                            public void onItemClick(View view, int position) {
-
-                                Toast.makeText(MainActivity.this, "you clicked: " + position, Toast.LENGTH_SHORT).show();
-
-                            }
-                        });
-
-                    }
-                });
 
         RxTextView.textChangeEvents(mFieldMovieName)
                 .debounce(400, TimeUnit.MILLISECONDS)
@@ -109,6 +74,42 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onNext(TextViewTextChangeEvent textViewTextChangeEvent) {
                         Log.i(TAG, "onNext " + textViewTextChangeEvent.text().toString());
+
+                        mFilmListObservable = mService.getFilmList(textViewTextChangeEvent.text().toString(), "json", "movie");
+                        mFilmListObservable.subscribeOn(Schedulers.newThread())
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .subscribe(new Subscriber<FilmList>() {
+                                    @Override
+                                    public void onCompleted() {}
+
+                                    @Override
+                                    public void onError(Throwable e) {
+                                        Log.i(TAG, e.getMessage());
+                                        e.getStackTrace();
+                                    }
+
+                                    @Override
+                                    public void onNext(final FilmList filmList) {
+
+                                        hideProgressDialog();
+                                        Log.i(TAG, "size of list: " + filmList.getSearch().size());
+
+                                        mFilmListAdapter = new FilmListAdapter(MainActivity.this, filmList, R.layout.row_film_list);
+                                        mRecyclerView.setAdapter(mFilmListAdapter);
+
+                                        mFilmListAdapter.setOnItemClickListener(new FilmListAdapter.OnItemClickListener() {
+                                            @Override
+                                            public void onItemClick(View view, int position) {
+
+                                                //Toast.makeText(MainActivity.this, "you clicked: " + position, Toast.LENGTH_SHORT).show();
+                                                Intent intent = new Intent(MainActivity.this, ActivityFilmDetail.class);
+                                                intent.putExtra("filmId", filmList.getSearch().get(position).getImdbID());
+                                                startActivity(intent);
+                                            }
+                                        });
+
+                                    }
+                                });
                     }
                 });
 

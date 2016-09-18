@@ -14,7 +14,7 @@ import rx.Observable;
 public interface FilmService {
 
     @GET(Utils.BASE_URL)
-    Observable<FilmUnique> getFilmDetails(@Query("t") String movieTitle, @Query("r") String responseType);
+    Observable<FilmUnique> getFilmDetails(@Query("i") String filmId, @Query("r") String responseType);
 
     @GET(Utils.BASE_URL)
     Observable<FilmList> getFilmList(@Query("s") String movieTitle, @Query("r") String responseType, @Query("type") String type);
