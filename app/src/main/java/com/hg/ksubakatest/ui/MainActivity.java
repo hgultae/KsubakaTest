@@ -6,8 +6,10 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.EditText;
 
+import com.hg.ksubakatest.MyApplication;
 import com.hg.ksubakatest.R;
 import com.hg.ksubakatest.model.FilmList;
+import com.hg.ksubakatest.model.Search;
 import com.hg.ksubakatest.webservice.FilmService;
 
 import javax.inject.Inject;
@@ -23,7 +25,6 @@ public class MainActivity extends AppCompatActivity {
     @Inject
     FilmService mService;
 
-
     public final String TAG = getClass().getSimpleName();
     private ProgressDialog mDialog;
     private EditText mFieldMovieName;
@@ -32,6 +33,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        ((MyApplication) getApplication()).getmApiComponent().inject(this);
 
         mFieldMovieName = (EditText) findViewById(R.id.field_movie_name);
 
@@ -55,6 +58,10 @@ public class MainActivity extends AppCompatActivity {
                     public void onNext(FilmList filmList) {
 
                         Log.i(TAG, "size of list: " + filmList.getSearch().size());
+
+                        for(Search search : filmList.getSearch()){
+                            Log.i(TAG, "search item: " + search);
+                        }
                     }
                 });
     }
