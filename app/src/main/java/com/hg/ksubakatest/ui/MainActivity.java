@@ -5,6 +5,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
@@ -16,6 +18,9 @@ import com.hg.ksubakatest.model.FilmList;
 import com.hg.ksubakatest.model.Search;
 import com.hg.ksubakatest.webservice.FilmService;
 import com.jakewharton.rxbinding.widget.RxTextView;
+import com.jakewharton.rxbinding.widget.TextViewTextChangeEvent;
+
+import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
@@ -35,6 +40,7 @@ public class MainActivity extends AppCompatActivity {
     private EditText mFieldMovieName;
     private RecyclerView mRecyclerView;
     private FilmListAdapter mFilmListAdapter;
+    private Observable<FilmList> mFilmListObservable;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,11 +52,11 @@ public class MainActivity extends AppCompatActivity {
         mFieldMovieName = (EditText) findViewById(R.id.field_movie_name);
         mRecyclerView = (RecyclerView) findViewById(R.id.recycler_film_list);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        
 
         showProgressDialog("", "Loading...");
-        Observable<FilmList> filmListObservable = mService.getFilmList("Batman", "json", "movie");
-
-        filmListObservable.subscribeOn(Schedulers.newThread())
+        mFilmListObservable = mService.getFilmList("Batman", "json", "movie");
+        mFilmListObservable.subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Subscriber<FilmList>() {
                     @Override
@@ -85,6 +91,26 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
 
+        RxTextView.textChangeEvents(mFieldMovieName)
+                .debounce(400, TimeUnit.MILLISECONDS)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<TextViewTextChangeEvent>() {
+                    @Override
+                    public void onCompleted() {
+                        Log.i(TAG, "onCompleted");
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        Log.i(TAG, "onError " + e.getMessage());
+
+                    }
+
+                    @Override
+                    public void onNext(TextViewTextChangeEvent textViewTextChangeEvent) {
+                        Log.i(TAG, "onNext " + textViewTextChangeEvent.text().toString());
+                    }
+                });
 
     }
 
